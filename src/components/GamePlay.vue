@@ -5,7 +5,6 @@
                 v-on:correct-answer="updateGame(true)"
                 v-on:wrong-answer="updateGame(false)">
     </QuizQuestion>
-    <h1>Current score: {{ this.result }}</h1>
 </section>
 </template>
 
@@ -15,12 +14,18 @@ import axios from "axios";
 
 class Question{
     constructor(question){
-        this.question = question.question;
-        this.correct_answer = question.correct_answer;
-        this.wrong_answers = question.incorrect_answers;
+        this.question = this.decode(question.question);
+        this.correct_answer = this.decode(question.correct_answer);
+        this.wrong_answers = this.decode(question.incorrect_answers);
         this.options = [];
         this.randomizeOptions();
-        console.log(this);
+    }
+    decode(encodedStr){
+        let parser = new DOMParser;
+        let dom = parser.parseFromString(
+            '<!doctype html><body>' + encodedStr,
+            'text/html');
+    return dom.body.textContent;
     }
     randomizeOptions(){
         let correctIndex= Math.floor(Math.random() * 4); 
@@ -40,11 +45,10 @@ class Question{
     }
 }
 let getQuestionIterator = function*(list){
-        for(let item of list){
-            yield item;
-        }
+    for(let item of list){
+        yield item;
     }
-
+}
 
 export default {
     name: 'GamePlay',
@@ -81,7 +85,7 @@ export default {
                 self.questionsIterator = getQuestionIterator(self.questions);
                 self.currentQuestion = self.questionsIterator.next().value;
                 console.log(self.currentQuestion);
-            })
+            });
     },
   components: {
       QuizQuestion
@@ -92,6 +96,6 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 #game_area{
-    background: lightgray;
+
 }
 </style>
