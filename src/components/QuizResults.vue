@@ -4,21 +4,23 @@
         <h2>Result</h2>
         <h2 id="result_text">{{this.result}}/100</h2>
     </section>
-    <table>
-        <tr>
-            <th>Question</th>
-            <th>Correct answer</th>
-            <th>Your answer</th>
-        </tr>
-        <tr v-for="question in questions" v-bind:key="question.questionText">
-            <td>{{question.questionText}}</td>
-            <td>{{question.correctAnswer}}</td>
-            <td style="background-color:lime" v-if="question.answeredCorrectly">{{question.selectedAnswer}}</td>
-            <td style="background-color:red" v-else>{{question.selectedAnswer}}</td>
-        </tr>
-        <div id="last_row"></div>
+    <section>
+        <table>
+            <tr>
+                <th>Question</th>
+                <th>Correct answer</th>
+                <th>Your answer</th>
+            </tr>
+            <tr v-for="question in questions" v-bind:key="question.questionText">
+                <td>{{question.questionText}}</td>
+                <td>{{question.correctAnswer}}</td>
+                <td style="background-color:lime" v-if="question.answeredCorrectly">{{question.selectedAnswer}}</td>
+                <td style="background-color:red" v-else>{{question.selectedAnswer}}</td>
+            </tr>
+            <div id="last_row"></div>
 
-    </table>
+        </table>
+    </section>
 </section>
 </template>
 
@@ -31,8 +33,6 @@ export default {
     }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 
 <style scoped>
 table {

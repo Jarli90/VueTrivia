@@ -2,7 +2,7 @@
 <section id="game_area">
     <h1>Question {{10-this.questions.length}}/10</h1>
     <section id="questionArea">
-        <QuizQuestion v-bind:question="this.currentQuestion" v-on:update="updateGame">
+        <QuizQuestion v-bind:question="this.currentQuestion" v-on:update-game="onUpdateGame">
         </QuizQuestion>
     </section>
 </section>
@@ -20,59 +20,81 @@ export default {
             // initialize array so header doesn't show 10/10 before start
             questions: new Array(10),
             answeredQuestions: [],
-            currentQuestion: {},
-            result: 0
+            currentQuestion: {}
         }
     },
-    methods: {
-        updateGame(answer) {
-            this.currentQuestion.selectedAnswer = answer;
-            let isCorrect = this.currentQuestion.answeredCorrectly;
-            if (isCorrect)
-                this.result += 10;
+    /**
+     * Checks that params are present, and initializes the game or return to the main menu
+     */
+    created() {
+        let params = this.$route.params;
 
-            this.answeredQuestions.push(this.currentQuestion);
+        // Checks params sent from GameMenu
+        if (Object.entries(params).length === 0 
+            || !params.difficulty 
+            || !params.category
+        )
+            this.toMainMenu();
+        else
+            this.fetchQuestions(params);
+    },
+    methods: {
+        /**
+         * Updates answered questions and ends game if there are no more questions
+         * @param {String} answer String containing the selected answer from QuizQuestion
+         */
+        onUpdateGame(question) {
+            this.answeredQuestions.push(question);
+
+            //Display next question to screen
             this.currentQuestion = this.questions.pop();
 
             if (!this.currentQuestion)
                 this.endGame();
         },
+        /**
+         * Ends the game and routes to the GameOver component
+         */
         endGame() {
             this.$router.push({
                 name: "GameOver",
                 params: {
-                    "result": this.result,
                     "questions": this.answeredQuestions
                 }
             });
-        }
-    },
-    mounted() {
-        let self = this;
-        let params = this.$route.params;
-        // If no params are passed, the game returns to the main menu
-        if (Object.entries(params).length === 0 && params.constructor === Object)
+        },
+        /**
+         * Routes to Main Menu
+         */
+        toMainMenu(){
             this.$router.push({
                 name: "MainMenu"
             });
-
-        let {
-            difficulty,
-            category
-        } = params;
-        let url = `https://opentdb.com/api.php?amount=10&difficulty=${difficulty.toLowerCase()}&category=${category.id}&type=multiple`;
-        axios.get(url).then(function (response) {
-            self.questions = response.data.results.map(q => new Question(q));
-            self.currentQuestion = self.questions.pop();
-        });
+        },
+        /**
+         * Fetches the questions from opentdb.com
+         * @param {Object} params parameters passed from the GameMenu component
+         */
+        fetchQuestions(params){
+            let {
+                difficulty,
+                category
+            } = params;
+            let self = this;
+            let url = `https://opentdb.com/api.php?amount=10&difficulty=${difficulty.toLowerCase()}&category=${category.id}&type=multiple`;
+            axios.get(url)
+                .then(function (response) {
+                    self.questions = response.data.results.map(q => new Question(q));
+                    self.currentQuestion = self.questions.pop();
+                })
+                .catch((err) => console.log("Error while fetching questions:", err));
+        }
     },
     components: {
         QuizQuestion
     }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 
 <style scoped>
 #game_area {
@@ -81,7 +103,8 @@ export default {
     border: dashed 1px white;
     border-radius: 20px;
     background-color: darkcyan;
-    height: 80%
+    padding-bottom: 3%;
+    /* height: 80% */
 }
 
 #questionArea {

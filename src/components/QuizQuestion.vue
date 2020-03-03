@@ -1,25 +1,25 @@
 <template>
-<section v-if="this.question.questionText != null">
-    <div id="question">
+<section v-if="question.questionText != null">
+    <header id="question">
         <h1>{{ question.questionText }}</h1>
-    </div>
+    </header>
     <h1>{{ this.statusText }}</h1>
-    <div>
+    <section>
         <div id="options">
-            <button v-on:click="onSelectAnswer(question.options[0], 'first')" id="first">
+            <button v-on:click="onSelectAnswer($event, question.options[0])" id="first">
                 {{ question.options[0] }}
             </button>
-            <button v-on:click="onSelectAnswer(question.options[1], 'second')" id="second">
+            <button v-on:click="onSelectAnswer($event, question.options[1])" id="second">
                 {{ question.options[1] }}
             </button>
-            <button v-on:click="onSelectAnswer(question.options[2], 'third')" id="third">
+            <button v-on:click="onSelectAnswer($event, question.options[2])" id="third">
                 {{ question.options[2] }}
             </button>
-            <button v-on:click="onSelectAnswer(question.options[3], 'fourth')" id="fourth">
+            <button v-on:click="onSelectAnswer($event, question.options[3])" id="fourth">
                 {{ question.options[3] }}
             </button>
         </div>
-    </div>
+    </section>
 </section>
 <section v-else>
     <h1>Loading Quiz...</h1>
@@ -38,30 +38,54 @@ export default {
         }
     },
     methods: {
-        onSelectAnswer(option, id) {
-            this.disableButtons();
-            let isCorrect = this.question.checkAnswer(option);
-            let className = isCorrect ? "correct" : "wrong";
-            document.getElementById(id).classList.add(className);
-            this.statusText = isCorrect ? "Correct answer!" : "Wrong answer!";
+        /**
+         * Selected answer click handler
+         * @param {Event} event event object passed from button
+         * @param {String} answer selected answer
+         */
+        onSelectAnswer(event, answer) {
+            this.question.selectedAnswer = answer;
+
+            this.updateButtons(event.target);
+            this.statusText = this.question.answeredCorrectly ? "Correct answer!" : "Wrong answer!";
+
+            const oneSecond = 1000; //ms
             setTimeout(() => {
-                this.$emit("update", option);
-                document.getElementById(id).classList.remove(className);
+                this.$emit("update-game", this.question);
+
                 this.statusText = "Select an answer";
-                this.enableButtons();
-            }, 1000);
+                this.resetButtons(event.target);
+            }, oneSecond);
+        },
+        /**
+         * Updates button-styling to show correct or wrong answer, and disables buttons
+         * @param {Button} selectedButton Button clicked 
+         */
+        updateButtons(selectedButton) {
+            this.disableButtons();
+            let className = this.question.answeredCorrectly ? "correct" : "wrong";
+            selectedButton.classList.add(className);
+        },
+        /**
+         * Resets button-styling, and enables buttons
+         * @param {Button} selectedButton Button clicked 
+         */
+        resetButtons(selectedButton) {
+            let className = this.question.answeredCorrectly ? "correct" : "wrong";
+            selectedButton.classList.remove(className);
+            this.enableButtons();
         },
         disableButtons() {
-            document.querySelectorAll("button").forEach(b => b.classList.add("disabled"));
+            document.querySelectorAll("button")
+                .forEach(b => b.classList.add("disabled"));
         },
         enableButtons() {
-            document.querySelectorAll("button").forEach(b => b.classList.remove("disabled"));
+            document.querySelectorAll("button")
+                .forEach(b => b.classList.remove("disabled"));
         }
     }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 
 <style scoped>
 #options {
@@ -116,7 +140,6 @@ button.correct {
     border-style: inset;
     border-color: lightgreen;
     background-color: lightgreen;
-
 }
 
 button.wrong {

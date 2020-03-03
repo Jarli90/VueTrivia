@@ -1,5 +1,5 @@
 <template>
-<div id="game_over">
+<article id="game_over">
     <header>
         <h1>Game over</h1>
         <div style="grid-column: 1">
@@ -22,7 +22,7 @@
     <footer>
         <p>Developed by Jarl-Idar Aasen, February 2020</p>
     </footer>
-</div>
+</article>
 </template>
 
 <script>
@@ -38,33 +38,43 @@ export default {
             questions: []
         }
     },
+    /**
+     * Retrieves params sent from the GamePlay component, or returns to the main menu
+     */
+    beforeMount() {
+        let params = this.$route.params;
+        if (Object.entries(params).length === 0
+            || !params.questions) {
+            this.toMainMenu();
+        } else {
+             this.questions = params.questions;
+            // Calculates result from the list of questions
+            this.result = this.questions.reduce((acc, question) => question.answeredCorrectly ? acc + 10 : acc, 0);
+        }
+        this.difficulty = sessionStorage.getItem("difficulty");
+        this.category = sessionStorage.getItem("category");
+    },
     methods: {
+        /**
+         * Main menu click handler
+         */
         onMainMenuClick() {
+            this.toMainMenu();
+        },
+        /**
+         * Returns to the main menu
+         */
+        toMainMenu() {
             this.$router.push({
-                name: 'MainMenu'
+                name: "MainMenu"
             });
         }
     },
     components: {
         QuizResults
-    },
-    mounted() {
-        // Go back to main menu if not passed from the GamePlay component.
-        if (this.$route.params.result) {
-            this.result = this.$route.params.result;
-            this.questions = this.$route.params.questions;
-        } else
-            this.$router.push({
-                name: "MainMenu"
-            });
-
-        this.difficulty = sessionStorage.getItem("difficulty");
-        this.category = sessionStorage.getItem("category");
     }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 
 <style scoped>
 button {

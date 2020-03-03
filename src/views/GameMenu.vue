@@ -1,24 +1,24 @@
 <template>
 <article>
-    <div id="loadWrapper" style="height:100%" v-if="availableCategories.length != 0">
+    <div id="loadWrapper" v-if="availableCategories.length != 0">
         <header>
             <h1>Welcome to Vue Trivia!</h1>
         </header>
         <section id="main_menu">
             <div id="menu">
-                <section v-if="availableCategories.length != 0" id="categories">
-                    <h3>Select Category:</h3>
+                <section required v-if="availableCategories.length != 0" id="categories">
+                    <h3>Category:</h3>
                     <select v-model="selectedCategory">
-                        <option disabled value="">Select category</option>
+                        <option hidden disabled>Select category</option>
                         <option v-for="category in availableCategories" v-bind:value="category" v-bind:key="category.id">
-                            <p>{{category.name}}</p>
+                            {{category.name}}
                         </option>
                     </select>
                 </section>
                 <section id="difficulty">
-                    <h3>Select difficulty:</h3>
+                    <h3>Difficulty:</h3>
                     <select v-model="selectedDifficulty">
-                        <option value="" disabled>Select difficulty</option>
+                        <option hidden disabled>Select difficulty</option>
                         <option>Easy</option>
                         <option>Medium</option>
                         <option>Hard</option>
@@ -43,58 +43,72 @@ export default {
     name: 'GameMenu',
     data() {
         return {
-            selectedDifficulty: "",
-            selectedCategory: "",
+            selectedDifficulty: "Select difficulty",
+            selectedCategory: "Select category",
             availableCategories: []
         }
     },
-    mounted() {
-        let self = this;
-        Axios.get("https://opentdb.com/api_category.php")
-            .then((res) => {
-                console.log(res.data);
-                self.availableCategories = res.data.trivia_categories;
-            });
+    created() {
+        this.fetchCategories();
     },
     watch: {
         'selectedDifficulty': function (difficulty) {
             sessionStorage.setItem("difficulty", difficulty);
-            this.updateButton();
+            if (this.selectedCategory != "Select category" 
+                && this.selectedDifficulty != "Select difficulty")
+                this.enableStartGameButton();
         },
         'selectedCategory': function (category) {
-
             sessionStorage.setItem("category", category.name);
-            console.log(sessionStorage.getItem("category"));
-            this.updateButton();
+            if (this.selectedCategory != "Select category" 
+                && this.selectedDifficulty != "Select difficulty")
+                this.enableStartGameButton();
         }
     },
     methods: {
-        onStartGameClick() {
-            if (this.selectedCategory.name && this.selectedDifficulty) {
-                this.$router.push({
-                    name: "Game",
-                    params: {
-                        category: this.selectedCategory,
-                        difficulty: this.selectedDifficulty
-                    }
-                });
-            } else {
-                alert("Select category and difficulty!");
-            }
-
+        /**
+         * Fetches categories from opentdb.com
+         */
+        fetchCategories(){
+            let self = this;
+            Axios.get("https://opentdb.com/api_category.php")
+                .then((res) => {
+                    self.availableCategories = res.data.trivia_categories;
+                })
+                .catch((err) => console.log("Error while fetching categories:", err));  
         },
-        updateButton() {
-            if (this.selectedCategory && this.selectedDifficulty) {
+        /**
+         * Checks if category and difficulty is selected
+         */
+        onStartGameClick() {
+            if (this.selectedCategory.name && this.selectedDifficulty)
+                this.startGame();
+            else
+                alert("Select category and difficulty!");
+        },
+        /**
+         * Starts game
+         */
+        startGame(){
+            this.$router.push({
+                name: "Game",
+                params: {
+                    category: this.selectedCategory,
+                    difficulty: this.selectedDifficulty
+                }
+            });
+        },
+        /**
+         * Enables button if difficulty and category is selected
+         */
+        enableStartGameButton() {
                 let button = document.getElementById("start_button");
                 button.classList.add("ready");
                 button.innerText = "Start game!";
-            }
         }
     }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 
 <style scoped>
 header {
@@ -114,6 +128,7 @@ header h1 {
 #loadWrapper {
     width: 90%;
     margin: auto;
+    height: 100%;
 }
 
 #menu {
@@ -141,7 +156,6 @@ footer p {
     margin: 20px;
     font-weight: lighter;
     color: lightgray;
-    vertical-align: center;
 }
 
 article {
@@ -151,15 +165,6 @@ article {
 select,
 option {
     background-color: lightblue;
-    text-align: center;
-}
-
-select {
-    width: 40%;
-}
-
-option p {
-    text-align: center;
 }
 
 button {
@@ -191,7 +196,6 @@ button.ready {
     from {
         transform: scale(1);
     }
-
     to {
         transform: scale(1.1);
     }
